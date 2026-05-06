@@ -11,13 +11,19 @@ class HiveService {
   static Future<void> init() async {
     await Hive.initFlutter();
 
-    Hive.registerAdapter(ProductModelAdapter());
-    Hive.registerAdapter(StockHistoryModelAdapter());
-    Hive.registerAdapter(SyncItemAdapter());
+    if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(ProductModelAdapter());
+    if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(StockHistoryModelAdapter());
+    if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(SyncItemAdapter());
 
-    await Hive.openBox<ProductModel>(productsBoxName);
-    await Hive.openBox<StockHistoryModel>(historyBoxName);
-    await Hive.openBox<SyncItem>(syncQueueBoxName);
+    if (!Hive.isBoxOpen(productsBoxName)) {
+      await Hive.openBox<ProductModel>(productsBoxName);
+    }
+    if (!Hive.isBoxOpen(historyBoxName)) {
+      await Hive.openBox<StockHistoryModel>(historyBoxName);
+    }
+    if (!Hive.isBoxOpen(syncQueueBoxName)) {
+      await Hive.openBox<SyncItem>(syncQueueBoxName);
+    }
   }
 
   static Box<ProductModel> get productsBox => Hive.box<ProductModel>(productsBoxName);

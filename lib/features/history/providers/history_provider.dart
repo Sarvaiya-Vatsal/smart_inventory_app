@@ -31,14 +31,13 @@ class HistoryNotifier extends Notifier<List<StockHistoryModel>> {
   }
 
   void deleteLogsForProduct(String productId) {
-    final keysToDelete = HiveService.historyBox.values
+    final logsToDelete = HiveService.historyBox.values
         .where((log) => log.productId == productId)
-        .map((log) => log.id)
         .toList();
 
-    for (final key in keysToDelete) {
-      HiveService.historyBox.delete(key);
-      SyncService().addToQueue('delete', 'stock_history', {'id': key});
+    for (final log in logsToDelete) {
+      HiveService.historyBox.delete(log.id);
+      SyncService().addToQueue('delete', 'stock_history', {'id': log.id});
     }
 
     state = state.where((log) => log.productId != productId).toList();

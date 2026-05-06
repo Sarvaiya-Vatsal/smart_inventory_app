@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'hive_service.dart';
@@ -17,6 +18,7 @@ class SyncService {
   void init() {
     _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
       if (results.isNotEmpty && results.first != ConnectivityResult.none) {
+        debugPrint('[SyncService] Connectivity restored — triggering sync');
         syncPendingItems();
       }
     });
@@ -32,30 +34,53 @@ class SyncService {
       timestamp: DateTime.now(),
     );
     await HiveService.syncQueueBox.put(item.id, item);
+    debugPrint('[SyncService] Queued [$operation] on [$collection] — queue size: ${HiveService.syncQueueBox.length}');
     syncPendingItems();
   }
 
   Future<void> syncPendingItems() async {
     if (_isSyncing) return;
-    
+
     final connectivityResult = await _connectivity.checkConnectivity();
-    if (connectivityResult.isEmpty || connectivityResult.first == ConnectivityResult.none) return;
+    if (connectivityResult.isEmpty || connectivityResult.first == ConnectivityResult.none) {
+      debugPrint('[SyncService] Offline — sync deferred');
+      return;
+    }
 
     _isSyncing = true;
+    int successCount = 0;
+    int failCount = 0;
+
     try {
       final pendingItems = HiveService.syncQueueBox.values.toList()
         ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
-      for (var item in pendingItems) {
-        bool success = await _processItem(item);
+      if (pendingItems.isEmpty) {
+        debugPrint('[SyncService] No pending items to sync');
+        return;
+      }
+
+      debugPrint('[SyncService] Starting sync — ${pendingItems.length} item(s) pending');
+
+      for (final item in pendingItems) {
+        final success = await _processItem(item);
         if (success) {
           await HiveService.syncQueueBox.delete(item.id);
+          successCount++;
+          debugPrint('[SyncService] ✅ Synced [${item.operation}] on [${item.collection}] (id: ${item.id})');
         } else {
-          break;
+          failCount++;
+          debugPrint('[SyncService] ❌ Failed [${item.operation}] on [${item.collection}] (id: ${item.id}) — will retry later');
         }
       }
+
+      debugPrint('[SyncService] Sync complete — $successCount succeeded, $failCount failed');
+
+      if (HiveService.syncQueueBox.isEmpty) {
+        debugPrint('[SyncService] ✅ Queue cleared — all items synced to Firebase');
+      }
     } catch (e) {
-      // Keep errors silent for offline persistence
+      debugPrint('[SyncService] Unexpected error during sync: $e');
     } finally {
       _isSyncing = false;
     }
@@ -66,7 +91,7 @@ class SyncService {
       final payload = item.getPayloadMap();
       final docId = payload['id']?.toString() ?? item.id;
       final docRef = _firestore.collection(item.collection).doc(docId);
-      
+
       if (item.operation == 'delete') {
         await docRef.delete();
       } else if (item.operation == 'add' || item.operation == 'update') {
@@ -74,6 +99,7 @@ class SyncService {
       }
       return true;
     } catch (e) {
+      debugPrint('[SyncService] _processItem error: $e');
       return false;
     }
   }

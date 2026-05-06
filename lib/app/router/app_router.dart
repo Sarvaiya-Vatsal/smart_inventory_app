@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/products/presentation/screens/products_screen.dart';
 import '../../features/products/presentation/screens/add_edit_product_screen.dart';
+import '../../features/products/domain/models/product_model.dart';
 import '../../features/stock/presentation/screens/stock_screen.dart';
 import '../../features/history/presentation/screens/history_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
@@ -36,10 +37,8 @@ final appRouter = GoRouter(
                 GoRoute(
                   path: 'add_edit',
                   builder: (context, state) {
-                    final product = state.extra;
-                    // Need to import AddEditProductScreen and ProductModel
-                    // Since extra is dynamic, we'll cast it where it's used.
-                    return AddEditProductScreen(product: product as dynamic);
+                    final product = state.extra as ProductModel?;
+                    return AddEditProductScreen(product: product);
                   },
                 ),
               ],

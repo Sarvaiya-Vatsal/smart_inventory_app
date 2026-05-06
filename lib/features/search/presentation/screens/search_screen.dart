@@ -43,7 +43,7 @@ class SearchScreen extends ConsumerWidget {
                   ),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1A3A6B).withOpacity(0.1),
+                      color: const Color(0xFF1A3A6B).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
