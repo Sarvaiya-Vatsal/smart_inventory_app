@@ -143,6 +143,7 @@ class SearchScreen extends ConsumerWidget {
                             'unit': product.unit,
                             'qty': product.qty,
                             'max': product.maxQty,
+                            'threshold': product.threshold,
                             'status': product.status,
                           },
                         );

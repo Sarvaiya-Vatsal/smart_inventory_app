@@ -123,6 +123,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                                 'unit': product.unit,
                                 'qty': product.qty,
                                 'max': product.maxQty,
+                                'threshold': product.threshold,
                                 'status': product.status,
                               },
                             ),

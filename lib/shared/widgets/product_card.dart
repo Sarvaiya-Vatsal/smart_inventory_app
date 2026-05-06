@@ -142,6 +142,35 @@ class ProductCard extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
+          if (item['status'] == 'Low Stock' || item['status'] == 'Out of Stock')
+            ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded,
+                        color: Color(0xFF2563EB), size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Suggested restock: ${((item['threshold'] as int) * 2) - (item['qty'] as int)} ${item['unit']}',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E3A8A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
         ],
       ),
     );
