@@ -60,4 +60,28 @@ class ProductModel extends HiveObject {
       unit: unit ?? this.unit,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'category': category,
+      'qty': qty,
+      'maxQty': maxQty,
+      'threshold': threshold,
+      'unit': unit,
+    };
+  }
+
+  factory ProductModel.fromMap(Map<String, dynamic> map) {
+    return ProductModel(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      category: map['category'] ?? '',
+      qty: map['qty']?.toInt() ?? 0,
+      maxQty: map['maxQty']?.toInt() ?? 0,
+      threshold: map['threshold']?.toInt() ?? 0,
+      unit: map['unit'] ?? '',
+    );
+  }
 }

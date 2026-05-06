@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/hive_service.dart';
 import '../domain/models/product_model.dart';
 import '../../history/providers/history_provider.dart';
+import '../../../core/services/sync_service.dart';
 
 class ProductsNotifier extends Notifier<List<ProductModel>> {
   @override
@@ -11,11 +12,13 @@ class ProductsNotifier extends Notifier<List<ProductModel>> {
 
   void addProduct(ProductModel product) {
     HiveService.productsBox.put(product.id, product);
+    SyncService().addToQueue('add', 'products', product.toMap());
     state = [...state, product];
   }
 
   void updateProduct(ProductModel product) {
     HiveService.productsBox.put(product.id, product);
+    SyncService().addToQueue('update', 'products', product.toMap());
     state = [
       for (final p in state)
         if (p.id == product.id) product else p
@@ -24,6 +27,7 @@ class ProductsNotifier extends Notifier<List<ProductModel>> {
 
   void deleteProduct(String id) {
     HiveService.productsBox.delete(id);
+    SyncService().addToQueue('delete', 'products', {'id': id});
     ref.read(historyProvider.notifier).deleteLogsForProduct(id);
     state = state.where((p) => p.id != id).toList();
   }

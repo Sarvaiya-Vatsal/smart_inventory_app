@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/services/hive_service.dart';
 import '../domain/models/stock_history_model.dart';
+import '../../../core/services/sync_service.dart';
 
 class HistoryNotifier extends Notifier<List<StockHistoryModel>> {
   @override
@@ -25,6 +26,7 @@ class HistoryNotifier extends Notifier<List<StockHistoryModel>> {
     );
 
     HiveService.historyBox.put(log.id, log);
+    SyncService().addToQueue('add', 'stock_history', log.toMap());
     state = [log, ...state];
   }
 
@@ -36,6 +38,7 @@ class HistoryNotifier extends Notifier<List<StockHistoryModel>> {
 
     for (final key in keysToDelete) {
       HiveService.historyBox.delete(key);
+      SyncService().addToQueue('delete', 'stock_history', {'id': key});
     }
 
     state = state.where((log) => log.productId != productId).toList();

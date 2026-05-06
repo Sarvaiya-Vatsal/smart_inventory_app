@@ -26,4 +26,24 @@ class StockHistoryModel extends HiveObject {
     required this.change,
     required this.timestamp,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'productId': productId,
+      'productName': productName,
+      'change': change,
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
+
+  factory StockHistoryModel.fromMap(Map<String, dynamic> map) {
+    return StockHistoryModel(
+      id: map['id'] ?? '',
+      productId: map['productId'] ?? '',
+      productName: map['productName'] ?? '',
+      change: map['change']?.toInt() ?? 0,
+      timestamp: DateTime.parse(map['timestamp']),
+    );
+  }
 }
