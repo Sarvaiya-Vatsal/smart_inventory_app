@@ -1,46 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../products/domain/models/product_model.dart';
+import '../../../products/providers/products_provider.dart';
 
-class StockScreen extends StatefulWidget {
+class StockScreen extends ConsumerStatefulWidget {
   const StockScreen({super.key});
 
   @override
-  State<StockScreen> createState() => _StockScreenState();
+  ConsumerState<StockScreen> createState() => _StockScreenState();
 }
 
-class _StockScreenState extends State<StockScreen> {
+class _StockScreenState extends ConsumerState<StockScreen> {
   final TextEditingController _quantityController =
       TextEditingController(text: '0');
 
-  final List<Map<String, dynamic>> _products = const [
-    {
-      'name': 'Pipette Tips',
-      'qty': 150,
-      'location': 'Warehouse A',
-    },
-    {
-      'name': 'Beakers 500ml',
-      'qty': 85,
-      'location': 'Warehouse B',
-    },
-    {
-      'name': 'Nitril Gloves',
-      'qty': 45,
-      'location': 'Warehouse A',
-    },
-    {
-      'name': 'Petri Dishes',
-      'qty': 420,
-      'location': 'Warehouse C',
-    },
-    {
-      'name': 'Ethanol',
-      'qty': 0,
-      'location': 'Warehouse B',
-    },
-  ];
-
-  Map<String, dynamic>? _selectedProduct;
+  ProductModel? _selectedProduct;
 
   @override
   void dispose() {
@@ -54,21 +29,14 @@ class _StockScreenState extends State<StockScreen> {
       return;
     }
     final qty = int.tryParse(_quantityController.text) ?? 0;
-    if (qty <= 0) {
-      _showSnack('Enter a valid quantity', const Color(0xFFD97706));
+    
+    final error = ref.read(productsProvider.notifier).stockIn(_selectedProduct!.id, qty);
+    if (error != null) {
+      _showSnack(error, const Color(0xFFDC2626));
       return;
     }
-    setState(() {
-      final idx =
-          _products.indexWhere((p) => p['name'] == _selectedProduct!['name']);
-      if (idx != -1) {
-        _selectedProduct = {
-          ..._selectedProduct!,
-          'qty': (_selectedProduct!['qty'] as int) + qty,
-        };
-      }
-      _quantityController.text = '0';
-    });
+
+    setState(() => _quantityController.text = '0');
     _showSnack('Stock In: +$qty units added', const Color(0xFF16A34A));
   }
 
@@ -78,21 +46,14 @@ class _StockScreenState extends State<StockScreen> {
       return;
     }
     final qty = int.tryParse(_quantityController.text) ?? 0;
-    if (qty <= 0) {
-      _showSnack('Enter a valid quantity', const Color(0xFFD97706));
+    
+    final error = ref.read(productsProvider.notifier).stockOut(_selectedProduct!.id, qty);
+    if (error != null) {
+      _showSnack(error, const Color(0xFFDC2626));
       return;
     }
-    if (qty > (_selectedProduct!['qty'] as int)) {
-      _showSnack('Insufficient stock', const Color(0xFFDC2626));
-      return;
-    }
-    setState(() {
-      _selectedProduct = {
-        ..._selectedProduct!,
-        'qty': (_selectedProduct!['qty'] as int) - qty,
-      };
-      _quantityController.text = '0';
-    });
+
+    setState(() => _quantityController.text = '0');
     _showSnack('Stock Out: -$qty units removed', const Color(0xFFDC2626));
   }
 
@@ -111,6 +72,14 @@ class _StockScreenState extends State<StockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final products = ref.watch(productsProvider);
+    
+    if (_selectedProduct != null && !products.any((p) => p.id == _selectedProduct!.id)) {
+      _selectedProduct = null;
+    } else if (_selectedProduct != null) {
+      _selectedProduct = products.firstWhere((p) => p.id == _selectedProduct!.id);
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F8),
       body: SafeArea(
@@ -170,7 +139,7 @@ class _StockScreenState extends State<StockScreen> {
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: DropdownButtonHideUnderline(
-                        child: DropdownButton<Map<String, dynamic>>(
+                        child: DropdownButton<ProductModel>(
                           value: _selectedProduct,
                           hint: Text(
                             'Choose an item...',
@@ -185,11 +154,11 @@ class _StockScreenState extends State<StockScreen> {
                             size: 24,
                           ),
                           isExpanded: true,
-                          items: _products
+                          items: products
                               .map((p) => DropdownMenuItem(
                                     value: p,
                                     child: Text(
-                                      p['name'],
+                                      p.name,
                                       style: GoogleFonts.inter(
                                         fontSize: 15,
                                         color: const Color(0xFF0D1B2A),
@@ -228,8 +197,8 @@ class _StockScreenState extends State<StockScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   _selectedProduct != null
-                                      ? 'Available in ${_selectedProduct!['location']}'
-                                      : 'Available in Warehouse A',
+                                      ? _selectedProduct!.status
+                                      : 'Select a product',
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -244,8 +213,8 @@ class _StockScreenState extends State<StockScreen> {
                               children: [
                                 TextSpan(
                                   text: _selectedProduct != null
-                                      ? '${_selectedProduct!['qty']}'
-                                      : '45',
+                                      ? '${_selectedProduct!.qty}'
+                                      : '-',
                                   style: GoogleFonts.poppins(
                                     fontSize: 28,
                                     fontWeight: FontWeight.w700,
@@ -253,7 +222,9 @@ class _StockScreenState extends State<StockScreen> {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: ' units',
+                                  text: _selectedProduct != null
+                                      ? ' ${_selectedProduct!.unit}'
+                                      : '',
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     color: const Color(0xFF94A3B8),

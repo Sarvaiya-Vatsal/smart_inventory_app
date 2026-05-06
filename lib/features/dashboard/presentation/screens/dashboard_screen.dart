@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../../../../shared/widgets/dashboard_info_card.dart';
+import '../../providers/dashboard_provider.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final totalProducts = ref.watch(totalProductsProvider);
+    final lowStockCount = ref.watch(lowStockCountProvider);
+    final outOfStockCount = ref.watch(outOfStockCountProvider);
+    final recentUpdates = ref.watch(recentUpdatesProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F8),
       body: SafeArea(
@@ -17,37 +25,37 @@ class DashboardScreen extends StatelessWidget {
             children: [
               _Header(),
               const SizedBox(height: 24),
-              const DashboardInfoCard(
+              DashboardInfoCard(
                 icon: Icons.grid_view_rounded,
-                iconColor: Color(0xFF1A56DB),
-                iconBg: Color(0xFFEBF0FF),
+                iconColor: const Color(0xFF1A56DB),
+                iconBg: const Color(0xFFEBF0FF),
                 label: 'Total Products',
-                value: '124',
-                badge: 'All Warehouses',
-                borderColor: Color(0xFF1A56DB),
+                value: '$totalProducts',
+                badge: 'All Categories',
+                borderColor: const Color(0xFF1A56DB),
               ),
               const SizedBox(height: 12),
-              const DashboardInfoCard(
+              DashboardInfoCard(
                 icon: Icons.warning_amber_rounded,
-                iconColor: Color(0xFFD97706),
-                iconBg: Color(0xFFFFF7ED),
+                iconColor: const Color(0xFFD97706),
+                iconBg: const Color(0xFFFFF7ED),
                 label: 'Low Stock Items',
-                value: '12',
+                value: '$lowStockCount',
                 badge: 'Requires Action',
-                borderColor: Color(0xFFD97706),
+                borderColor: const Color(0xFFD97706),
               ),
               const SizedBox(height: 12),
-              const DashboardInfoCard(
-                icon: Icons.update_rounded,
-                iconColor: Color(0xFF1A56DB),
-                iconBg: Color(0xFFEBF0FF),
-                label: 'Recently Updated',
-                value: '5',
-                badge: 'Today',
-                borderColor: Color(0xFF1A56DB),
+              DashboardInfoCard(
+                icon: Icons.error_outline_rounded,
+                iconColor: const Color(0xFFDC2626),
+                iconBg: const Color(0xFFFEF2F2),
+                label: 'Out of Stock',
+                value: '$outOfStockCount',
+                badge: 'Urgent',
+                borderColor: const Color(0xFFDC2626),
               ),
               const SizedBox(height: 28),
-              _RecentUpdatesSection(),
+              _RecentUpdatesSection(items: recentUpdates),
             ],
           ),
         ),
@@ -94,29 +102,9 @@ class _Header extends StatelessWidget {
 }
 
 class _RecentUpdatesSection extends StatelessWidget {
-  final List<Map<String, dynamic>> _items = const [
-    {
-      'name': 'Nitril Gloves',
-      'category': 'Lab Supplies',
-      'qty': '45 units',
-      'status': 'Normal',
-      'color': Color(0xFF16A34A),
-    },
-    {
-      'name': 'Beakers 500ml',
-      'category': 'Lab Supplies',
-      'qty': '120 units',
-      'status': 'Normal',
-      'color': Color(0xFF16A34A),
-    },
-    {
-      'name': 'Cardboard Boxes L',
-      'category': 'Packaging',
-      'qty': '18 units',
-      'status': 'Low',
-      'color': Color(0xFFD97706),
-    },
-  ];
+  final List items;
+
+  const _RecentUpdatesSection({required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -133,37 +121,35 @@ class _RecentUpdatesSection extends StatelessWidget {
                 color: const Color(0xFF0D1B2A),
               ),
             ),
-            TextButton(
-              onPressed: () {},
-              child: Text(
-                'View All',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1A3A6B),
-                ),
-              ),
-            ),
           ],
         ),
         const SizedBox(height: 8),
-        ..._items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _RecentTile(item: item),
-            )),
+        if (items.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text('No recent updates',
+                style: GoogleFonts.inter(color: const Color(0xFF718096))),
+          )
+        else
+          ...items.map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _RecentTile(item: item),
+              )),
       ],
     );
   }
 }
 
 class _RecentTile extends StatelessWidget {
-  final Map<String, dynamic> item;
+  final dynamic item;
 
   const _RecentTile({required this.item});
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = item['color'] as Color;
+    final bool isAddition = item.change > 0;
+    final statusColor = isAddition ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -187,8 +173,9 @@ class _RecentTile extends StatelessWidget {
               color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.science_outlined,
-                color: Color(0xFF4A5568), size: 20),
+            child: Icon(
+                isAddition ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                color: statusColor, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -196,7 +183,7 @@ class _RecentTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['name'],
+                  item.productName,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -204,7 +191,7 @@ class _RecentTile extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  item['category'],
+                  DateFormat('MMM dd, hh:mm a').format(item.timestamp),
                   style: GoogleFonts.inter(
                       fontSize: 12, color: const Color(0xFF718096)),
                 ),
@@ -215,42 +202,11 @@ class _RecentTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                item['qty'],
+                '${isAddition ? '+' : ''}${item.change}',
                 style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF0D1B2A),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      item['status'],
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
-                      ),
-                    ),
-                  ],
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: statusColor,
                 ),
               ),
             ],
