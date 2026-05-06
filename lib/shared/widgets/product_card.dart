@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'stock_status_indicator.dart';
+import 'mini_stock_chart.dart';
 
 class ProductCard extends StatelessWidget {
   final Map<String, dynamic> item;
@@ -141,6 +142,22 @@ class ProductCard extends StatelessWidget {
               backgroundColor: const Color(0xFFF1F5F9),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'STOCK TREND (Recent)',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF9CA3AF),
+              letterSpacing: 0.6,
+            ),
+          ),
+          const SizedBox(height: 8),
+          MiniStockChart(
+            productId: item['id'],
+            currentQty: item['qty'] as int,
+            color: color,
           ),
           if (item['status'] == 'Low Stock' || item['status'] == 'Out of Stock')
             ...[

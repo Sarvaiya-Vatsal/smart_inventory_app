@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../shared/widgets/dashboard_info_card.dart';
 import '../../providers/dashboard_provider.dart';
+import '../../../alerts/presentation/widgets/notification_bell.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -91,11 +92,7 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined,
-              color: Color(0xFF0D1B2A)),
-          onPressed: () {},
-        ),
+        const NotificationBell(),
       ],
     );
   }

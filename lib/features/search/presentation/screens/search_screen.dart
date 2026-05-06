@@ -138,6 +138,7 @@ class SearchScreen extends ConsumerWidget {
                         final product = filteredProducts[i];
                         return ProductCard(
                           item: {
+                            'id': product.id,
                             'name': product.name,
                             'category': product.category,
                             'unit': product.unit,

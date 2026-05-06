@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../shared/widgets/product_card.dart';
 import '../../providers/products_provider.dart';
+import '../../../alerts/presentation/widgets/notification_bell.dart';
 
 class ProductsScreen extends ConsumerStatefulWidget {
   const ProductsScreen({super.key});
@@ -58,6 +59,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                       ],
                     ),
                   ),
+                  const NotificationBell(),
                 ],
               ),
             ),
@@ -118,6 +120,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                             },
                             child: ProductCard(
                               item: {
+                                'id': product.id,
                                 'name': product.name,
                                 'category': product.category,
                                 'unit': product.unit,
