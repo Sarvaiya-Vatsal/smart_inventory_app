@@ -1,56 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 
 class AppShell extends StatelessWidget {
-  final Widget child;
+  final StatefulNavigationShell navigationShell;
 
-  const AppShell({super.key, required this.child});
-
-  int _locationToIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    switch (location) {
-      case AppConstants.routeProducts:
-        return 1;
-      case AppConstants.routeStock:
-        return 2;
-      case AppConstants.routeHistory:
-        return 3;
-      case AppConstants.routeSearch:
-        return 4;
-      default:
-        return 0;
-    }
-  }
+  const AppShell({super.key, required this.navigationShell});
 
   void _onTap(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        context.go(AppConstants.routeDashboard);
-        break;
-      case 1:
-        context.go(AppConstants.routeProducts);
-        break;
-      case 2:
-        context.go(AppConstants.routeStock);
-        break;
-      case 3:
-        context.go(AppConstants.routeHistory);
-        break;
-      case 4:
-        context.go(AppConstants.routeSearch);
-        break;
-    }
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = _locationToIndex(context);
+    final currentIndex = navigationShell.currentIndex;
 
     return Scaffold(
-      body: child,
+      body: navigationShell,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -147,10 +117,8 @@ class _NavItem extends StatelessWidget {
               label,
               style: GoogleFonts.inter(
                 fontSize: 11,
-                fontWeight:
-                    isSelected ? FontWeight.w700 : FontWeight.w400,
-                color:
-                    isSelected ? AppTheme.primary : const Color(0xFF9CA3AF),
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                color: isSelected ? AppTheme.primary : const Color(0xFF9CA3AF),
               ),
             ),
           ],

@@ -10,38 +10,59 @@ import '../../shared/widgets/app_shell.dart';
 final appRouter = GoRouter(
   initialLocation: AppConstants.routeDashboard,
   routes: [
-    ShellRoute(
-      builder: (context, state, child) => AppShell(child: child),
-      routes: [
-        GoRoute(
-          path: AppConstants.routeDashboard,
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: DashboardScreen(),
-          ),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) =>
+          AppShell(navigationShell: navigationShell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppConstants.routeDashboard,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: DashboardScreen(),
+              ),
+            ),
+          ],
         ),
-        GoRoute(
-          path: AppConstants.routeProducts,
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: ProductsScreen(),
-          ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppConstants.routeProducts,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: ProductsScreen(),
+              ),
+            ),
+          ],
         ),
-        GoRoute(
-          path: AppConstants.routeStock,
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: StockScreen(),
-          ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppConstants.routeStock,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: StockScreen(),
+              ),
+            ),
+          ],
         ),
-        GoRoute(
-          path: AppConstants.routeHistory,
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: HistoryScreen(),
-          ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppConstants.routeHistory,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: HistoryScreen(),
+              ),
+            ),
+          ],
         ),
-        GoRoute(
-          path: AppConstants.routeSearch,
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: SearchScreen(),
-          ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppConstants.routeSearch,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: SearchScreen(),
+              ),
+            ),
+          ],
         ),
       ],
     ),
